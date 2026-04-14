@@ -1,5 +1,4 @@
 import json
-import uuid
 import boto3
 from decimal import Decimal
 
@@ -16,29 +15,33 @@ def lambda_handler(event, context):
     try:
         body = json.loads(event.get("body") or "{}")
 
+        auction_id = body.get("auctionId")
         item_name = body.get("itemName")
-        description = body.get("description")
         reserve = body.get("reserve")
+        description = body.get("description")
 
-        if not item_name or not description or reserve is None:
+        if not auction_id or not item_name or reserve is None or not description:
             return {
                 "statusCode": 400,
                 "headers": headers,
-                "body": json.dumps({"message": "itemName, description, and reserve are required"})
+                "body": json.dumps({
+                    "message": "auctionId, itemName, reserve, and description are required"
+                })
             }
-
-        auction_id = str(uuid.uuid4())
 
         item = {
             "auctionId": auction_id,
             "itemName": item_name,
-            "description": description,
             "reserve": Decimal(str(reserve)),
+            "description": description,
             "auctionStatus": "open",
             "winningUserId": ""
         }
 
-        table.put_item(Item=item)
+        table.put_item(
+            Item=item,
+            ConditionExpression="attribute_not_exists(auctionId)"
+        )
 
         return {
             "statusCode": 200,
@@ -46,8 +49,8 @@ def lambda_handler(event, context):
             "body": json.dumps({
                 "auctionId": auction_id,
                 "itemName": item_name,
-                "description": description,
                 "reserve": float(reserve),
+                "description": description,
                 "auctionStatus": "open",
                 "winningUserId": ""
             })
