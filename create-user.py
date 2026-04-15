@@ -1,5 +1,4 @@
 import json
-import uuid
 import boto3
 from decimal import Decimal
 
@@ -16,17 +15,18 @@ def lambda_handler(event, context):
     try:
         body = json.loads(event.get("body") or "{}")
 
+        user_id = body.get("userId")
         name = body.get("name")
         acct_balance = body.get("acctBalance")
 
-        if not name or acct_balance is None:
+        if not user_id or not name or acct_balance is None:
             return {
                 "statusCode": 400,
                 "headers": headers,
-                "body": json.dumps({"message": "name and acctBalance are required"})
+                "body": json.dumps({
+                    "message": "userId, name, and acctBalance are required"
+                })
             }
-
-        user_id = str(uuid.uuid4())
 
         item = {
             "userId": user_id,
