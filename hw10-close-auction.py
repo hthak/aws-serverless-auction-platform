@@ -2,7 +2,7 @@ import json
 import boto3
 from decimal import Decimal
 
-dynamodb = boto3.resource("dynamodb")
+dynamodb = boto3.resource("dynamodb") #code
 client = boto3.client("dynamodb")
 
 auctions_table = dynamodb.Table("auctions")
