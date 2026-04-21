@@ -33,7 +33,7 @@ def lambda_handler(event, context):
                 "headers": headers,
                 "body": json.dumps({"message": "auctionId is required"})
             }
-
+        #code
         response = table.query(
             KeyConditionExpression=boto3.dynamodb.conditions.Key("auctionId").eq(auction_id),
             ScanIndexForward=False
