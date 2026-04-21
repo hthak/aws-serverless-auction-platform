@@ -1,0 +1,18 @@
+#set($status = $input.path('$.status'))
+#if($status == "SUCCEEDED")
+#set($out = $util.parseJson($input.path('$.output')))
+{
+  "message": "$util.escapeJavaScript($out.message)"
+}
+#else
+#set($cause = $input.path('$.cause'))
+#if($cause != "")
+{
+  "message": "$util.escapeJavaScript($cause)"
+}
+#else
+{
+  "message": "Bid failed"
+}
+#end
+#end

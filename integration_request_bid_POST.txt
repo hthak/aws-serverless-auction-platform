@@ -1,0 +1,4 @@
+{
+  "stateMachineArn": "arn:aws:states:us-east-1:042312821815:stateMachine:bidding-state-machine",
+  "input": "$util.escapeJavaScript($input.json('$')).replaceAll("\\'","'")"
+}
