@@ -4,7 +4,11 @@ A serverless auction backend built on AWS for managing users, auctions, bids, wo
 
 The project was originally deployed in an AWS Learner Lab environment and connected to a course-provided React frontend. My work focused on implementing the backend application logic, API integration, data persistence, bid-processing workflow, event pipeline, and Lambda deployment automation.
 
-> **Project status:** The original AWS Learner Lab environment is no longer active. This repository is a portfolio version of the project and preserves the backend code, API mappings, deployment workflow, and supporting configuration used during development.
+> **Project Status**
+>
+> The original AWS Learner Lab environment is no longer active. This repository is a portfolio version of the project and preserves the backend code, API mappings, deployment workflow, and supporting configuration used during development.
+>
+> The AWS resources were originally created manually through the AWS Management Console as required by the assignment, so this repository is not intended to recreate the entire environment with a single deployment command.
 
 ---
 
@@ -23,7 +27,7 @@ The application supported a complete online auction workflow:
 - update the winner's account balance
 - process events asynchronously through AWS messaging services
 
-The system used a serverless and event-driven AWS architecture centered around:
+The backend was built using a serverless and event-driven AWS architecture centered around:
 
 - Amazon API Gateway
 - AWS Lambda
@@ -33,6 +37,18 @@ The system used a serverless and event-driven AWS architecture centered around:
 - Amazon SQS
 - Amazon S3
 - GitHub Actions
+
+---
+
+## System Design
+
+The system was implemented according to the following design provided for the project:
+
+![AWS auction system design](docs/design-diagram.png)
+
+*Design diagram provided by the CSE 3250 course staff and used as the implementation specification for the project.*
+
+The architecture separates synchronous API operations, bid-processing workflow logic, persistent storage, and asynchronous event processing.
 
 ---
 
@@ -56,19 +72,42 @@ My implementation focused on the AWS services and backend APIs consumed by this 
 
 ---
 
-## 2. Users
+## 2. API Gateway
+
+Amazon API Gateway acted as the entry point between the React application and the AWS backend.
+
+The application exposed operations for:
+
+- creating users
+- retrieving users
+- creating auctions
+- retrieving auctions
+- retrieving individual auction details
+- retrieving bids for an auction
+- submitting new bids
+- closing auctions
+
+Depending on the operation, API Gateway routed the request either to an AWS Lambda function or to the bid-processing Step Functions workflow.
+
+The project used the same API integration style consistently across the API and handled response transformation and CORS behavior as required by the application.
+
+---
+
+## 3. Users
 
 User information was stored in a DynamoDB `users` table.
 
-Each user included information such as:
+Each user contained data including:
 
 - `userId`
 - name
 - account balance
 
-The API exposed operations for creating and retrieving users.
+The backend included Lambda functions for creating users and retrieving the available users.
 
 ### Create User
+
+A create-user request followed this flow:
 
 ```text
 React Client
