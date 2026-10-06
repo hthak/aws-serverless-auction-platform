@@ -120,3 +120,131 @@ create_user Lambda
     |
     v
 DynamoDB users table
+
+```
+## AWS Service Responsibilities
+
+Each AWS service had a specific responsibility in the auction platform.
+
+### Amazon API Gateway
+
+API Gateway served as the main entry point for requests from the React frontend.
+
+It exposed routes for operations such as:
+
+- creating users
+- retrieving users
+- creating auctions
+- retrieving auctions
+- retrieving individual auction details
+- retrieving bids
+- submitting bids
+- closing auctions
+
+Depending on the route, API Gateway forwarded the request either to a Lambda function or to the Step Functions bidding workflow.
+
+---
+
+### AWS Lambda
+
+Lambda functions implemented the backend application logic.
+
+The project used separate Python Lambda functions for different operations, including:
+
+- creating users
+- retrieving users
+- creating auctions
+- retrieving auctions
+- retrieving individual auctions
+- retrieving bids
+- closing auctions
+- processing asynchronous queue events
+
+Using separate Lambda functions kept the backend modular and aligned each function with a specific API or event-processing responsibility.
+
+---
+
+### Amazon DynamoDB
+
+DynamoDB stored the application's persistent data.
+
+The project used three tables:
+
+- `users`
+- `auctions`
+- `bids`
+
+The `users` table stored user account information and balances.
+
+The `auctions` table stored auction information such as the reserve price, auction status, and winning user.
+
+The `bids` table stored bid records associated with individual auctions.
+
+DynamoDB was accessed by Lambda functions and the Step Functions workflow throughout the application.
+
+---
+
+### AWS Step Functions
+
+Step Functions handled the bid-processing workflow.
+
+Instead of placing all bid-validation logic inside one Lambda function, the state machine coordinated the sequence of checks required before accepting a bid.
+
+The workflow verified that:
+
+- the user existed
+- the user had enough available funds
+- the auction existed
+- the auction was open
+- the new bid was greater than the current highest bid
+
+If the bid passed all validation checks, it was stored in DynamoDB.
+
+The state machine used JSONata for conditions and data transformation, as required by the original project specification.
+
+---
+
+### Amazon SNS
+
+Amazon SNS was used to publish events produced by the bidding workflow.
+
+When a new valid highest bid was accepted, an event could be published to the SNS topic.
+
+SNS allowed the application to separate the bid-processing workflow from downstream consumers.
+
+This meant the bidding request did not need to directly execute every follow-up action itself.
+
+---
+
+### Amazon SQS
+
+Amazon SQS acted as the message queue for asynchronous event processing.
+
+Messages published through SNS were delivered to the SQS queue.
+
+The queue provided a buffer between the event producer and the Lambda consumer, allowing events to be processed independently of the original bid request.
+
+This helped create a decoupled event-driven architecture.
+
+---
+
+### Logger Lambda
+
+A dedicated Lambda function consumed messages from the SQS queue.
+
+In this project, the function acted as a simple event logger for the asynchronous messaging pipeline.
+
+The flow was:
+
+```text
+Accepted Bid
+    |
+    v
+Amazon SNS
+    |
+    v
+Amazon SQS
+    |
+    v
+Logger Lambda
+
