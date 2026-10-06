@@ -1,0 +1,44 @@
+name: Deploy Lambda Functions
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: self-hosted
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }}
+          aws-region: us-east-1
+
+      - name: Package Lambda functions
+        run: |
+          zip -j create-user.zip ./backend/create_user.py
+          zip -j get-all-users.zip ./backend/get_users.py
+          zip -j create-auction.zip ./backend/create_auction.py
+          zip -j get-all-auctions.zip ./backend/get_auctions.py
+          zip -j get-auction.zip ./backend/get_auction.py
+          zip -j close-auction.zip ./backend/close_auction.py
+          zip -j get-bids.zip ./backend/get_bids.py
+          zip -j simple-logger.zip ./backend/simple_logger.py
+
+      - name: Deploy Lambda functions
+        run: |
+          aws lambda update-function-code --function-name=hw10-create-user --zip-file=fileb://create-user.zip
+          aws lambda update-function-code --function-name=hw10-get-all-users --zip-file=fileb://get-all-users.zip
+          aws lambda update-function-code --function-name=hw10-create-auction --zip-file=fileb://create-auction.zip
+          aws lambda update-function-code --function-name=hw10-get-all-auctions --zip-file=fileb://get-all-auctions.zip
+          aws lambda update-function-code --function-name=hw10-get-auctions --zip-file=fileb://get-auction.zip
+          aws lambda update-function-code --function-name=hw10-close-auction --zip-file=fileb://close-auction.zip
+          aws lambda update-function-code --function-name=hw10-get-bids --zip-file=fileb://get-bids.zip
+          aws lambda update-function-code --function-name=hw10-simple-logger --zip-file=fileb://simple-logger.zip
